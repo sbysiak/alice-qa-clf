@@ -1,0 +1,6 @@
+# LaTeX
+*.log
+*.aux
+*.out
+*.gz
+*.pdf

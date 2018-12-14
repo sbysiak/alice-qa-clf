@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+
+
+\title{ THE TITLE \\
+Service task - report \& notes}
+\author{Sebastian Bysiak}
+\date{December 2018 -- ...}
+
+\graphicspath{ {images/} }
+
+
+
+
+\begin{document}
+\maketitle
+
+
+\section{Preliminary remarks}
+
+\textit{
+This document is created for keeping track of the progress, major and minor subtasks and milestones related to my service task.\\
+It should contain results of all related analyses but also notes of various thing I learnt during preparing and working on the service task.
+Basically every day spent on the project should result in some figure or note in this document, except for whole day of dump debugging. 
+Therefore notes should be brief and compact with sources/references where applicable without messing up.
+}
+
+
+\section{Notes - varia}
+
+\subsubsection{PCA \& linear autoencoders}
+Linear autoencoders (AE) searches same space of the solutions - they can yield same result.
+Linear AE could be useful in some cases like: 
+\begin{itemize}[topsep=0pt, itemsep=-2pt]
+    %\setlength\itemsep{-0.5em}
+	\item[-] large dataset (hard to fit in memory) - there is also incremental PCA (with sklearn implementation)
+	\item[-] online learning 
+\end{itemize}
+
+Robust PCA = PCA + sensitivity to anomalies
+splits data into low-rank matrix L and sparse matrix S.
+L is low dim approximation of non-anomaly examples \vspace{0pt} \\
+\href{https://www.youtube.com/watch?v=eFQVvFMHlC8}{\texttt{youtube.com}} -- 3min, "Anomaly Detection with Robust Deep Auto-encoders"\\
+\url{https://github.com/dlaptev/RobustPCA} 
+
+
+
+
+
+
+
+\end{document}
