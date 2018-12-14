@@ -34,22 +34,31 @@ Therefore notes should be brief and compact with sources/references where applic
 \section{Notes - varia}
 
 \subsubsection{PCA \& linear autoencoders}
-Linear autoencoders (AE) searches same space of the solutions - they can yield same result.
+\begin{itemize}
+\item Linear autoencoders (AE) searches same space of the solutions - they can yield same result.
 Linear AE could be useful in some cases like: 
 \begin{itemize}[topsep=0pt, itemsep=-2pt]
     %\setlength\itemsep{-0.5em}
 	\item[-] large dataset (hard to fit in memory) - there is also incremental PCA (with sklearn implementation)
 	\item[-] online learning 
 \end{itemize}
-
-Robust PCA = PCA + sensitivity to anomalies
+\item Robust PCA = PCA + sensitivity to anomalies
 splits data into low-rank matrix L and sparse matrix S.
 L is low dim approximation of non-anomaly examples \vspace{0pt} \\
 \href{https://www.youtube.com/watch?v=eFQVvFMHlC8}{\texttt{youtube.com}} -- 3min, "Anomaly Detection with Robust Deep Auto-encoders"\\
 \url{https://github.com/dlaptev/RobustPCA} 
+\end{itemize}
 
 
+\subsection{Collinearity}
+\begin{itemize}
+\item Collinearity can be divided into structural (created by researcher by adding artificial columns by combining those already present, e.g. $x \rightarrow x^2$) and data (present in data itself).
+\item Collinearity affects coefficients estimates (increases their variance) and makes $p$ values related to certain variables untrustworthy. It's applicable only to those highly correlated variables.
+\item Collinearity can be identified using Variance Inflation Factors (VIF), which values vary from 1 to $\infty$, values over 5-10 mean serious correlation.
+\item Collinearity does \underline{not} affect predictions and goodness-of-fit statistics! 
+\end{itemize}
 
+\href{http://statisticsbyjim.com/regression/multicollinearity-in-regression-analysis/}{\texttt{statisticsbyjim.com/regression/multicollinearity-...}}
 
 
 
