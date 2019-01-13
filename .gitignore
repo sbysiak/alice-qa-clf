@@ -1,6 +1,21 @@
+# specific
+notes-loose*
+ToDo
+
+# data
+*.csv
+*.dat
+*.root
+
+# python / jupyter
+*ipynb_checkpoints*
+
+
 # LaTeX
 *.log
 *.aux
 *.out
 *.gz
 *.pdf
+
+
