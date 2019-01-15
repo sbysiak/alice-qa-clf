@@ -7,6 +7,10 @@ ToDo
 *.dat
 *.root
 
+# graphics
+*.png
+*.jpg
+
 # python / jupyter
 *ipynb_checkpoints*
 
@@ -16,6 +20,9 @@ ToDo
 *.aux
 *.out
 *.gz
+*.bbl
+*.blg
+*.toc
 *.pdf
 
 

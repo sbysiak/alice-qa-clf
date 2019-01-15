@@ -1,14 +1,17 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage{placeins}
+\usepackage{soul}
 
 
-
-\title{ THE TITLE \\
-Service task - report \& notes}
+\title{ Classification of TPC QA Run2 data \\ based on ML techniques \\
+\small{Service task - report \& notes}}
 \author{Sebastian Bysiak}
 \date{December 2018 -- ...}
 
@@ -19,6 +22,7 @@ Service task - report \& notes}
 
 \begin{document}
 \maketitle
+\tableofcontents
 
 
 \section{Preliminary remarks}
@@ -30,10 +34,10 @@ Basically every day spent on the project should result in some figure or note in
 Therefore notes should be brief and compact with sources/references where applicable without messing up.
 }
 
-
+\clearpage
 \section{Notes - varia}
 
-\subsubsection{PCA \& linear autoencoders}
+\subsection{PCA \& linear autoencoders}
 \begin{itemize}
 \item Linear autoencoders (AE) searches same space of the solutions - they can yield same result.
 Linear AE could be useful in some cases like: 
@@ -62,5 +66,63 @@ L is low dim approximation of non-anomaly examples \vspace{0pt} \\
 
 
 
+\subsection{Statistical distances}
+Problem: comparing distributions and marking them as anomalous. 
+First approach: sample statistics (mean, std, percentiles) - preferably mix of a couple as single can easily match by accident.
+
+\paragraph*{Kolmogorov-Smirnov test as a distance}
+ -- checks whether two samples are drawn from the same distribution. $\mathrm{KS}(T, B) = \mathrm{sup\;\;|F_T(x) - F_B(x)|}$ = max difference in cumulative distribution function.
+$H_0$: both samples are drawn from the same distribution, if critical value $K_{\alpha}$ is exceeded by KS we reject null hypothesis.
+
+KS test value can be used for quantitative assessment how anomalous is distribution. KS is a distance:
+\begin{itemize}[topsep=5pt, itemsep=-2pt, label={--}]
+\item $KS(X,Y) \geq 0$ (non-negativity)
+\item $KS(X,Y) = 0 \iff X = Y$ (identity of indiscernibles)
+\item $KS(X,Y) = KS(Y,X)$ (symmetry)
+\item $KS(X,Z) \leq KS(X,Y) + KS(Y,Z)$ (triangle inequality)
+\end{itemize}
+\ul{Being a distance adds abstraction level - creates a metric space where each distribution is a point, which can be used for outlier detection or clustering.}
+
+\FloatBarrier
+
+\paragraph{Extensions: EMD, Wasserstein and Cramer-von Mises}
+KS as a metric works well only if distributions overlap, otherwise we cannot say how different they are (see: Fig.~\ref{fig:stat-dist-no-overlap})
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.54\textwidth]{stat-dist-KS-no-overlap-uniform}
+	\includegraphics[width=0.45\textwidth]{stat-dist-KS-no-overlap}
+  \caption{Problem appears when distributions do not overlap - on the left KS reaches plateau and on the right $KS(T,B) \approx KS(T',B)$ besides significantly further hill in $T'$.}
+  \label{fig:stat-dist-no-overlap}
+\end{figure}
+
+
+\begin{wrapfigure}[4]{r}{0.45\textwidth}
+  \begin{center}
+  	\vspace{-3em}
+	\includegraphics[width=0.45\textwidth]{stat-dist-EMD}
+  \end{center}
+\end{wrapfigure}
+
+Solution: earth mover's distance (EMD) aka the $1^{st}$ Wasserstein distance = minimal (amount of soil x distance covered to transform one distribution into another). \\ $\mathrm{EMD}(B,T) = W_1 (B,T) = \mathrm{inf}_{\gamma} \int_{\mathbb{R}x\mathbb{R}} |x-y| d\gamma(x,y)$. \\
+It can be also defined using CDF or quantile functions: \\ $\mathrm{EMD}(B,T) = \int_\mathbb{R} |F_B(x) - F_T(x)| dx = \int_0^1 |Q_B(x) - Q_T(x)| dx$, \\ which is important due to computational cost of computing infimum (see first equation). It also gives intuitive interpretation of EMD as area between CDF.
+
+\begin{wrapfigure}[7]{r}{0.45\textwidth}
+  \begin{center}
+  	\vspace{-2em}
+	\includegraphics[width=0.45\textwidth]{stat-dist-local-deformation}
+  \end{center}
+\end{wrapfigure}
+
+EMD solves the problem from Fig. \ref{fig:stat-dist-no-overlap} as the difference in areas is significant. 
+There are still some deformations which are not caught by EMD, like local deformations (on the right). They can be eliminated with $p^\mathrm{th}$ Wasserstein distance: \\ 
+$W_p (B,T) = (\int_0^1 |Q_B(x) - Q_T(x)|^p dx)^{1/p}$,
+or similarly using CDFs:\\ 
+$d_p (B,T) = (\int_\mathbb{R} |F_B(x) - F_T(x)|^p dx)^{1/p}$, where $d_2$ is known as Cramer-von Mises distance.
+Some distances can be defined also in multidim spaces \dots
+
+\noindent
+\href{https://youtu.be/U7xdiGc7IRU}{\texttt{youtube.com}} -- 25min, "Detecting Anomalies Using Stat. Distances SciPy 2018" \\
+\href{https://www.datadoghq.com/blog/engineering/robust-statistical-distances-for-machine-learning/}{\texttt{blog post on datadoghq.com} }
 
 \end{document}
