@@ -1,11 +1,19 @@
 # specific
 notes-loose*
 ToDo
+*.copy
+*.txt
+
+
+# archive
+*.zip
 
 # data
 *.csv
 *.dat
 *.root
+*.xml
+*.pickle
 
 # graphics
 *.png
@@ -24,5 +32,4 @@ ToDo
 *.blg
 *.toc
 *.pdf
-
 
