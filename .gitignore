@@ -1,9 +1,12 @@
 # specific
-notes-loose*
-ToDo
 *.copy
 *.txt
-
+*.cmd
+ARCHIVE/
+OUTPUTS/
+test*
+notes-loose*
+ToDo
 
 # archive
 *.zip
