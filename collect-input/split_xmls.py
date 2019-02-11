@@ -10,18 +10,35 @@
 
 import xml.etree.ElementTree as ET
 import re
+import sys
+import os
+from time import time 
 
-run = '286454'
-n_out_files = 50  # equals number of time chunks better set higher, unnecessary files are not created
+tic = time()
+input_fname = sys.argv[1]
+run = input_fname.split('/')[-3][-6:]
+
+n_out_files = 0
+with open(input_fname) as f: 
+    maxi = 0
+    for i_line,line in enumerate(f): 
+        if 'turl' not in line: continue 
+        if 'Stage' in line or 'QA/QAres' in line: continue 
+        fpath = line.split()[-3] 
+        time_interval = int(fpath.split('.')[1].split('/')[0])  
+        maxi = max(maxi, time_interval) 
+n_out_files = int(maxi/100)
+
+if i_line < 10: sys.exit()
 
 sum_written = 0
-
 fnames_out_lst = []
 
-for time_id in range(1, n_out_files):
-    tree = ET.parse('all_files_to_be_merged.xml')
+for time_id in range(1, n_out_files+1):
+    output_fname = input_fname.replace('.xml', '_{0:02}.xml'.format(time_id))
+    tree = ET.parse(input_fname)
     root = tree.getroot()
-    print(f'starting loop for id={time_id} with len={len(root[0])}')
+    #print('starting loop for id={0} with len={1}'.format(time_id, len(root[0])))
     lst_torm = []
     for ie, e in enumerate(root[0]):
         if e.tag != 'event': continue
@@ -38,17 +55,24 @@ for time_id in range(1, n_out_files):
    
    
     if len(root[0]) > 1:
-        tree.write(f'files_to_be_merged_{time_id}.xml')
+        tree.write( output_fname )
         sum_written += len(root[0])
         
-    print(f'after loop: removed {len(lst_torm)} elements, there are {len(root[0])} more, so far {sum_written}={len(fnames_out_lst)} were written')
+    #print 'after loop: removed {0} elements, there are {1} more, so far {2}={3} were written'.format(len(lst_torm), len(root[0]), sum_written, len(fnames_out_lst))
 
-print('\n\n\nList of files not included in any output file:')
 all_fnames = []
-tree = ET.parse('all_files_to_be_merged.xml')
+tree = ET.parse(input_fname)
 root = tree.getroot()
+
+printed=0
 for e in root[0]:
     if e.tag != 'event': continue
     fname = e[0].attrib['turl']
     all_fnames.append(fname)
-    if fname not in fnames_out_lst: print(fname)
+    if fname not in fnames_out_lst: 
+        if not printed: 
+            print '\nList of files not included in any output file:'
+            printed=1
+        print fname
+
+print 'exec. time: {0} sec ({1} lines - {2} time intervals)'.format(time()-tic, i_line, n_out_files)
