@@ -18,6 +18,7 @@ tic = time()
 input_fname = sys.argv[1]
 run = input_fname.split('/')[-3][-6:]
 
+# compute number of output files = number of time intervals
 n_out_files = 0
 with open(input_fname) as f: 
     maxi = 0
@@ -29,11 +30,12 @@ with open(input_fname) as f:
         maxi = max(maxi, time_interval) 
 n_out_files = int(maxi/100)
 
+# do nothing if there is nothing to split
 if i_line < 10: sys.exit()
 
+# copy origin xml's parts to suitable output xmls
 sum_written = 0
 fnames_out_lst = []
-
 for time_id in range(1, n_out_files+1):
     output_fname = input_fname.replace('.xml', '_{0:02}.xml'.format(time_id))
     tree = ET.parse(input_fname)
@@ -53,17 +55,15 @@ for time_id in range(1, n_out_files+1):
     for e_torm in lst_torm:
         root[0].remove(e_torm)
    
-   
     if len(root[0]) > 1:
         tree.write( output_fname )
         sum_written += len(root[0])
-        
     #print 'after loop: removed {0} elements, there are {1} more, so far {2}={3} were written'.format(len(lst_torm), len(root[0]), sum_written, len(fnames_out_lst))
 
+# check if there are files which were not copied to any output file
 all_fnames = []
 tree = ET.parse(input_fname)
 root = tree.getroot()
-
 printed=0
 for e in root[0]:
     if e.tag != 'event': continue
