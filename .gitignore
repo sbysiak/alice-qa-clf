@@ -4,9 +4,13 @@
 *.cmd
 ARCHIVE/
 OUTPUTS/
-test*
-notes-loose*
 ToDo
+test*
+tmp*
+notes-loose*
+*NOTES*
+*notes*
+*Notes*
 
 # archive
 *.zip

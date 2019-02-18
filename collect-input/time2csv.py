@@ -17,8 +17,8 @@ from array import array
 
 # ***  PARAMETERS  ***
 make_time_shift = 1
-main_dir = 'OUTPUTS/run286454'
-csv_fname = 'time-stats-run286454-merged.csv'
+main_dir = 'OUTPUTS/data/2018/LHC18d/'
+csv_fname = 'time-stats-LHC18d.csv'
 # ***      ***     ***
 
 
@@ -26,16 +26,25 @@ def shift_cetTimeLHC(cetTimeLHC):
     return cetTimeLHC+1262304000.+3600.
 
 def extract_time_interval_id(file_path):
-    return int(file_path[file_path.find('_id_')+4 : file_path.find('/QA')])
+    # /user/a/aliqat/www/qcml/data/2018/LHC18d/000285978/pass1/time_interval_01
+    str_just_before = 'time_interval_'
+    id_start = file_path.find(str_just_before)+len(str_just_before) 
+    return int(file_path[id_start : id_start+2])
+
+def extract_run(file_path):
+    run_str_start = file_path.find('000')
+    run = file_path[run_str_start : run_str_start+9]
+    return int(run)
 
 var_name = "cetTimeLHC"
-time_id_lst, mean_lst, std_lst, median_lst, min_lst, max_lst = [], [], [], [], [], []
+run_lst, time_id_lst, mean_lst, std_lst, median_lst, min_lst, max_lst = [], [], [], [], [], [], []
 
 files_list = []
 for root, subdirs, files in os.walk(main_dir):
     if len(files) < 1: continue
     if files[0] == 'QAresults.root':
         file_path = os.path.join(root,files[0])
+        if os.path.getsize(file_path) < 1000: continue
         files_list.append(file_path)
 
 
@@ -60,6 +69,8 @@ for file_path in sorted(files_list, key=extract_time_interval_id):
         median_orig = median_orig[0]
 
         # print 'fpath={}, mean={}, std={}, min={}, max={}'.format(file_path, mean, std, mini, maxi)
+        run = extract_run(file_path)
+        run_lst.append(run)
         time_interval_id = extract_time_interval_id(file_path)
         time_id_lst.append(time_interval_id)
         mean_lst.append(mean_orig)
@@ -91,14 +102,12 @@ else:
 
 
 
-
-
 # WRITE TO CSV
 with open(csv_fname, 'wb') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     csvfile.write(csv_comment)
-    writer.writerow(['time_interval_id', 'mean', 'std', 'mini', 'median', 'maxi'])
-    for row in zip(time_id_lst, mean_lst, std_lst, min_lst, median_lst, max_lst):
+    writer.writerow(['run', 'time_interval_id', 'mean', 'std', 'mini', 'median', 'maxi'])
+    for row in zip(run_lst, time_id_lst, mean_lst, std_lst, min_lst, median_lst, max_lst):
         writer.writerow(row)
 
 
