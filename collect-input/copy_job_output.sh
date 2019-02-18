@@ -29,6 +29,7 @@ for fpath in `alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/$RUN_DI
     if [[ -e $target_file ]]; then
         file_size_kb=`du -k "$target_file" | cut -f1` 
         if (( file_size_kb > 100 )); then
+            :
             echo "already exists and size ok ($file_size_kb KB) -- nothing to do"
         else
             echo "already exists but size is: $file_size_kb KB -- removing and downloading again ..."
