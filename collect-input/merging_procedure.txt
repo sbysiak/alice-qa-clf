@@ -1,0 +1,77 @@
+# # # #
+# CURRENT
+# # # #
+
+# create local directories per run e.g. OUTPUTS/data/2018/LHC18e/000286454/pass1/ @lxplus
+
+# create xmls @lxplus 
+bash create_xmls.sh   # set START_DIR
+
+# split xmls @lxplus
+for xml in `find OUTPUTS/data/2018/LHC18d/ -name "files_to_be_merged.xml"`; do echo "py split_xmls.py $xml"; done
+
+# create directories per time interval @alien
+# AND
+# copy xmls_per_time_interval from lxplus to alien @lxplus
+alien_main="/alice/cern.ch/user/s/sbysiak/grid-jobs/"
+for xml in `find OUTPUTS/data/2018/LHC18d/ -name "files_to_be_merged_*.xml"`; do 
+    dir_to_create=$(echo $xml | sed "s/files_to_be_merged/time_interval/" | sed "s/.xml//")
+    alien_mkdir $alien_main$dir_to_create
+    alien_cp file:$xml alien:$alien_main$dir_to_create
+done
+
+# submit jobs @lxplus
+submit_jobs.sh  # set MAIN_DIR
+
+---- after jobs are finished ----
+
+# copy to EOS 
+
+for f in `find . -name trending.root`; do 
+    echo $f; 
+    sshpass -f ~/.lxplus_pass rsync -avR $f sbysiak@lxplus.cern.ch:/eos/user/a/aliqat/www/qcml/data/;
+done   # to be run from outside of alidock OR copy ~/.lxplus_pass file inside; check current path vs target one
+
+# extract trading
+make_trending.sh
+
+if soft for trend extraction is modified, then run:
+    cd $ALIBUILD_WORK_DIR/BUILD/AliPhysics-latest/AliPhysics
+    make -j 4
+    make install -j 4
+    cp ~/.sw/slc7_x86-64/AliPhysics/master_ROOT6-1/PWGPP/TPC/macros/MakeTrend.C.modified  ~/.sw/slc7_x86-64/AliPhysics/master_ROOT6-1/PWGPP/TPC/macros/MakeTrend.C
+
+
+# export trading to *.csv
+trending2csv.py
+
+
+
+
+# # # #
+# DESIRED - to be done in the not so close future
+# # # #
+
+# create local directories per run e.g. OUTPUTS/data/2018/LHC18e/000286454/pass1/ @lxplus
+create_local_dirs.sh YEAR PERIOD [RUN] [PASS]                   // <-TODO
+
+# create xmls @lxplus 
+create_xmls.sh YEAR PERIOD [RUN] [PASS]                         // <-TODO
+
+# split xmls @lxplus
+split_xmls.py YEAR PERIOD [RUN] [PASS]                          // <-TODO
+
+# create directories per time interval @alien
+create_alien_dirs_per_time_interval.sh YEAR PERIOD [RUN] [PASS] // <- TODO
+
+# copy xmls_per_time_interval from lxplus to alien @lxplus
+copy_xmls_to_alien.sh YEAR PERIOD [RUN] [PASS]                  // <- TODO
+
+# submit jobs @lxplus
+submit_jobs.sh YEAR PERIOD [RUN] [PASS]
+
+---- after jobs are finished ----
+
+# extract trading
+
+# export trading to *.csv
