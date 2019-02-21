@@ -37,7 +37,7 @@ if i_line < 10: sys.exit()
 sum_written = 0
 fnames_out_lst = []
 for time_id in range(1, n_out_files+1):
-    output_fname = input_fname.replace('.xml', '_{0:02}.xml'.format(time_id))
+    output_fname = input_fname.replace('.xml', '_{0:03}.xml'.format(time_id))
     tree = ET.parse(input_fname)
     root = tree.getroot()
     #print('starting loop for id={0} with len={1}'.format(time_id, len(root[0])))
