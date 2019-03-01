@@ -3,12 +3,13 @@
 # # # #
 
 # create local directories per run e.g. OUTPUTS/data/2018/LHC18e/000286454/pass1/ @lxplus
+bash create_dirs.sh "/alice/data/2018/LHC18d"
 
 # create xmls @lxplus 
-bash create_xmls.sh   # set START_DIR
+bash create_xmls.sh "/data/2018/LHC18d"
 
 # split xmls @lxplus
-for xml in `find OUTPUTS/data/2018/LHC18d/ -name "files_to_be_merged.xml"`; do echo "py split_xmls.py $xml"; done
+for xml in `find OUTPUTS/data/2018/LHC18d/ -name "files_to_be_merged.xml"`; do python split_xmls.py $xml; done
 
 # create directories per time interval @alien
 # AND
@@ -20,12 +21,23 @@ for xml in `find OUTPUTS/data/2018/LHC18d/ -name "files_to_be_merged_*.xml"`; do
     alien_cp file:$xml alien:$alien_main$dir_to_create
 done
 
-# submit jobs @lxplus
-submit_jobs.sh  # set MAIN_DIR
+# submit jobs @lxplus 
+submit_jobs.sh  "data/2018/LHC18d"
+
+# to resubmit (really submit again) failed jobs:
+# first create list of jobs with status DONE or any from "in progress", e.g. RUNNING
+# and then just run `submit_jobs.sh`
+list_submitted_jobs.sh
+submit_jobs.sh "data/2018/LHC18d"
+
 
 ---- after jobs are finished ----
 
-# copy to EOS 
+# copy from grid to EOS 
+copy_jobs_output.sh "data/2018/LHC18d/"
+
+
+# BELOW: TO BE DONE ON plgrid - in progress
 
 for f in `find . -name trending.root`; do 
     echo $f; 
