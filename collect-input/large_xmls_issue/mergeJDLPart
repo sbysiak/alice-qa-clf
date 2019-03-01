@@ -1,0 +1,79 @@
+# Generated merging jdl                     
+# $1 = year
+# $2 = period
+# $3 = run number                     
+# $4 = time interval: 1 - 44 in case of LHC18e/286454                     
+# $5 = part
+# $6 = TTL
+User = "sbysiak";
+Email="s.bysiak@cern.ch";
+# 
+Jobtag = {
+    "comment: QA: merging time interval - $4 in run $2/$3 (part$5)"
+};
+# Collection of files to be merged for current stage
+# > # InputDataCollection = {
+# > #    "LF:/alice/data/2018/LHC18e/000286454/pass1/Stage_5.xml,nodownload"
+# > # };
+# Output directory
+OutputDir = "/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/$1/$2/000$3/pass1/time_interval_$4/part_$5";
+# List of requested packages
+Packages = {
+     "VO_ALICE@AliDPG::prod-201812-01-1",
+     "VO_ALICE@AliPhysics::v5-09-44-01-1",
+     "VO_ALICE@jemalloc::v3.6.0",
+     "VO_ALICE@APISCONFIG::V1.1x"
+};
+# taken from parent job
+# List of input files to be uploaded to workers
+InputFile = {
+    "LF:/alice/validation/qa/validation_merge.rc",
+    "LF:/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/$1/$2/000$3/pass1/time_interval_$4/files_to_be_merged_$4_part$5.xml"
+};
+# This is the startup script
+Executable = "/alice/cern.ch/user/s/sbysiak/grid-jobs/train_merge_new.sh";
+# We split per SE for merging in stages
+# Time after which the job is killed (12 h)
+TTL = "$6";
+# Maximum number of input files to be merged in one go
+# Format of input data
+#InputDataListFormat = "xml-single";
+# Collection name to be processed on each worker node
+#InputDataList = "wn.xml";
+# Files to be archived
+Output = {
+    "QA_merge_log_archive.zip:std*,fileinfo*.log@disk=1",
+    "QA_merge_archive.zip:QAresults*.root@disk=3"
+};
+# 1 - sth > 0, states for just merging
+Arguments = "files_to_be_merged_$4_part$5.xml 1";
+# AliEn price for this job
+Price = "100000";
+# Validation script to be run for each subjob
+ValidationCommand = "/alice/validation/validation.sh";
+
+Workdirectorysize = {"12000MB"};
+
+# JDL variables - everything which is going to be exported
+JDLVariables = 
+{
+	"Packages",
+	"OutputDir",
+	"LPMINTERACTIONTYPE",
+	"LPMANCHORYEAR",
+	"LPMPRODUCTIONTAG", 
+	"LPMRUNNUMBER", 
+	"LPMRAWPASSID", 
+	"LegoResubmitZombies", 
+	"LPMHighPriority" 
+};
+
+
+LPMINTERACTIONTYPE = "PbPb";
+LPMANCHORYEAR = "$1";
+LPMPRODUCTIONTAG = "$2";
+LPMRUNNUMBER = "$3";
+LPMRAWPASSID = "2";
+LegoResubmitZombies = "1";
+LPMHighPriority = "1";
+
