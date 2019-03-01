@@ -4,6 +4,7 @@
 *.cmd
 ARCHIVE/
 OUTPUTS/
+LOGS/
 ToDo
 test*
 tmp*
