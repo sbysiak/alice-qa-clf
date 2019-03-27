@@ -30,7 +30,7 @@ notes-loose*
 
 # python / jupyter
 *ipynb_checkpoints*
-
+*.pyc
 
 # LaTeX
 *.log
