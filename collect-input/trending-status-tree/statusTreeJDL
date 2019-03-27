@@ -1,0 +1,77 @@
+# JDL for extraction of status tree from trending.root                    
+# $1 = year
+# $2 - period
+# $3 - TTL
+User = "sbysiak";
+Email="s.bysiak@cern.ch";
+# 
+Jobtag = {
+    "comment: QA: status tree $2"
+};
+# Collection of files to be merged for current stage
+# > # InputDataCollection = {
+# > #    "LF:/alice/data/2018/LHC18e/000286454/pass1/Stage_5.xml,nodownload"
+# > # };
+# Output directory
+OutputDir = "/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/statusTrees/data/$1/$2/output/";
+# List of requested packages
+Packages = {
+     "VO_ALICE@AliDPG::prod-201812-01-1",
+     "VO_ALICE@AliPhysics::v5-09-44-01-1",
+     "VO_ALICE@jemalloc::v3.6.0",
+     "VO_ALICE@APISCONFIG::V1.1x"
+};
+# taken from parent job
+# List of input files to be uploaded to workers
+InputFile = {
+    "LF:/alice/validation/qa/validation_merge.rc",
+    "LF:/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/statusTrees/data/$1/$2/input/trending.root"
+};
+# This is the startup script
+Executable = "/alice/cern.ch/user/s/sbysiak/grid-jobs/extract_status_tree.sh";
+# We split per SE for merging in stages
+# Time after which the job is killed (12 h = 43200)
+TTL = "$3";
+MaxWaitingTime="48h";
+# Maximum number of input files to be merged in one go
+# Format of input data
+#InputDataListFormat = "xml-single";
+# Collection name to be processed on each worker node
+#InputDataList = "wn.xml";
+# Files to be archived
+Output = {
+    "QA_statusTree_log_archive.zip:std*,fileinfo*.log@disk=1",
+    "QA_statusTree_archive.zip:trending*.root@disk=3"
+};
+# 1 - sth > 0, states for just merging
+Arguments = "trending.root 1";
+# AliEn price for this job
+Price = "100000";
+# Validation script to be run for each subjob
+ValidationCommand = "/alice/cern.ch/user/s/sbysiak/grid-jobs/validate_status_tree.sh";
+
+Workdirectorysize = {"12000MB"};
+
+# JDL variables - everything which is going to be exported
+JDLVariables = 
+{
+	"Packages",
+	"OutputDir"
+#	"LPMINTERACTIONTYPE",
+#	"LPMANCHORYEAR",
+#	"LPMPRODUCTIONTAG", 
+#	"LPMRUNNUMBER", 
+#	"LPMRAWPASSID", 
+#	"LegoResubmitZombies", 
+#	"LPMHighPriority" 
+};
+
+
+#LPMINTERACTIONTYPE = "$5";
+#LPMANCHORYEAR = "$1";
+#LPMPRODUCTIONTAG = "$2";
+#LPMRUNNUMBER = "$3";
+#LPMRAWPASSID = "2";
+#LegoResubmitZombies = "1";
+#LPMHighPriority = "1";
+
