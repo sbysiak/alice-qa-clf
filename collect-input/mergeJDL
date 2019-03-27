@@ -3,7 +3,8 @@
 # $2 = period
 # $3 = run number                     
 # $4 = time interval: 1 - 44 in case of LHC18e/286454                     
-# $5 = TTL
+# $5 = system e.g. pp PbPb
+# $6 = TTL
 # 
 User = "sbysiak";
 Email="s.bysiak@cern.ch";
@@ -34,7 +35,8 @@ InputFile = {
 Executable = "/alice/cern.ch/user/s/sbysiak/grid-jobs/train_merge_new.sh";
 # We split per SE for merging in stages
 # Time after which the job is killed (12 h = 43200)
-TTL = "$5";
+TTL = "$6";
+MaxWaitingTime="48h";
 # Maximum number of input files to be merged in one go
 # Format of input data
 #InputDataListFormat = "xml-single";
@@ -69,7 +71,7 @@ JDLVariables =
 };
 
 
-LPMINTERACTIONTYPE = "PbPb";
+LPMINTERACTIONTYPE = "$5";
 LPMANCHORYEAR = "$1";
 LPMPRODUCTIONTAG = "$2";
 LPMRUNNUMBER = "$3";
