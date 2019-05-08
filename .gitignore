@@ -23,6 +23,7 @@ notes-loose*
 *.root
 *.xml
 *.pickle
+*.dill
 
 # graphics
 *.png
