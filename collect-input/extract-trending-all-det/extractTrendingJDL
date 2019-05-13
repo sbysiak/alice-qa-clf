@@ -1,0 +1,60 @@
+# JDL for extraction of status tree from trending.root
+# $1 = year
+# $2 = period
+# $3 = run number
+# $4 = time interval: 001 - 999
+# $5 - detectors e.g. "ITS:TOF:T0:TRD:EVS" or "TOF"
+# $6 = TTL
+
+User = "sbysiak";
+Email="s.bysiak@cern.ch";
+Jobtag = {
+    "comment: QA: extract trending $4 in run $2/$3 ($5)"
+};
+
+# Output directory
+OutputDir = "/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/extractTrending/data/$1/$2/000$3/pass1/time_interval_$4/";
+# List of requested packages
+Packages = {
+     "VO_ALICE@AliDPG::prod-201812-01-1",
+     "VO_ALICE@AliPhysics::v5-09-44-01-1",
+     "VO_ALICE@jemalloc::v3.6.0",
+     "VO_ALICE@APISCONFIG::V1.1x"
+};
+
+# List of input files to be uploaded to workers
+InputFile = {
+#    "LF:/alice/validation/qa/validation_merge.rc",
+     "LF:/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/extractTrending/data/$1/$2/000$3/pass1/time_interval_$4/QAresults.root"
+};
+
+# This is the startup script
+Executable = "/alice/cern.ch/user/s/sbysiak/grid-jobs/extract_trending.sh";
+
+# Time after which the job is killed (12 h = 43200)
+TTL = "$6";
+MaxWaitingTime="48h";
+
+# Files to be archived
+Output = {
+    "QA_trending_log_archive.zip:std*,fileinfo*.log@disk=1",
+    "QA_trending_archive.zip:trending*.root@disk=3"
+};
+
+# 1 - sth > 0, states for just merging
+Arguments = "QAresults.root $1:$2:$3:$4 $5" ;
+
+# AliEn price for this job
+Price = "100000";
+
+# Validation script to be run for each subjob
+ValidationCommand = "/alice/cern.ch/user/s/sbysiak/grid-jobs/validate_extract_trending.sh";
+
+Workdirectorysize = {"12000MB"};
+
+# JDL variables - everything which is going to be exported
+JDLVariables =
+{
+	"Packages",
+	"OutputDir"
+};
