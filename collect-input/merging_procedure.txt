@@ -63,13 +63,69 @@ copy_jobs_output.sh "data/2018/LHC18d/"
 
 # merging part_1 + part_2
 # cd period-dir-on-eos
-for f1 in `find . -name "QAresults.root" | grep part_1`; do
+FILE_SIZE_THRESHOLD=1000
+time for f1 in `find . -name "QAresults.root" | grep part_1`; do
+    echo
+    echo $f1
     f2=`echo $f1 | sed 's/part_1/part_2/g'`;
     fmerged=`echo $f1 | sed 's/part_1\///g'`;
     if [[ ! -e $f2 ]]; then echo "$f2 does not exists -- skip"; continue; fi;
-    if [[ -e  $fmerged ]]; then echo "$fmerged found -- skip"; continue; fi;
-    alihadd $fmerged $f1 $f2 ;
+    if [[ -e  $fmerged ]]; then
+        fmerged_size_kb=`du -k "$fmerged" | cut -f1`
+        if (( fmerged_size_kb < FILE_SIZE_THRESHOLD )); then
+            echo "merged found but has size below threshold -- removing and trying again"
+            rm $fmerged
+        else
+            echo "$fmerged found and size is ok -- skip"
+            continue
+        fi
+    fi;
+    f1_size_kb=`du -k "$f1" | cut -f1`
+    f2_size_kb=`du -k "$f2" | cut -f1`
+    if (( f1_size_kb < FILE_SIZE_THRESHOLD )); then
+        echo "part_1 has size = ${f1_size_kb} which is below threshold = ${FILE_SIZE_THRESHOLD} -- not merging"
+        continue
+    elif (( f2_size_kb < $FILE_SIZE_THRESHOLD )); then
+        echo "part_2 has size = ${f2_size_kb} which is below threshold = ${FILE_SIZE_THRESHOLD} -- not merging"
+        continue
+    else
+        alihadd $fmerged $f1 $f2 > /dev/null;
+        fmerged_size_kb=`du -k "$fmerged" | cut -f1`
+        if (( fmerged_size_kb < FILE_SIZE_THRESHOLD )); then
+            echo "merged has size below threshold (merging failed) -- removing"
+            rm $fmerged
+        else
+            echo "merging went fine"
+        fi
+    fi
 done
+
+
+---- trending extraction for det != TPC ---- (@lxplus)
+# copy QAresults.root to grid
+time bash copy_qa_to_grid.sh "data/2018/LHC18p/"
+
+# submit jobs and copy output
+time bash submit_jobs_trending.sh "LHC18p"                        ; time bash copy_job_trending_ouputs.sh "data/2018/LHC18p/"
+or
+time bash submit_jobs_trending.sh "LHC18p"  ["ITS:TOF:T0:TRD:EVS"]; time bash copy_job_trending_ouputs.sh "data/2018/LHC18p/"
+
+# merge all trending.root and trending_EVS.root for given period
+period="LHC18p"; cd $eos/data/2018/$period;
+alihadd trending_merged_$period.root `find . -name "trending.root"`;
+alihadd trending_EVS_merged_$period.root `find . -name "trending_EVS.root"`;
+
+# copy trending_merged_$period.root on the GRID
+alien_cp trending_merged_$period.root alien:/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/statusTrees/data/2018/$period/input/
+
+# extract statusTree on GRID
+alien_submit statusTreeJDL "2018" "$period" "60000"
+
+# cp the result and trending_EVS_merged_$period.root to LOCAL and click through trending2csv_statusTreeGraphs.ipynb
+# cp trending_merged_$period_withGraphs.csv to EOS
+
+
+
 
 # on PLGRID:
 python master_trending_jobs.py  # set params of main()

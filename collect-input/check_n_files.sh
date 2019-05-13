@@ -7,9 +7,9 @@ export n_qaresults_eos=$(        find $eos/data/2018/$period/ -name "QAresults.r
 export n_qaresults_eos_part=$(   find $eos/data/2018/$period/ -name "QAresults.root"              | grep part    | wc -l)
 export n_trending_eos=$(         find $eos/data/2018/$period/ -name "trending.root" | wc -l)
 
-export n_xmls_grid=$(         alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/  "files_to_be_merged_*.xml" | grep -v part | grep data | wc -l )
-export n_xmls_grid_part=$(    alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/  "files_to_be_merged_*.xml" | grep part    | grep data | wc -l )
-export n_qaresults_grid=$(    alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/  "QAresults.root"           | grep -v part | grep data | wc -l )
+export n_xmls_grid=$(          alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/  "files_to_be_merged_*.xml" | grep -v part | grep data | wc -l )
+export n_xmls_grid_part=$(     alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/  "files_to_be_merged_*.xml" | grep part    | grep data | wc -l )
+export n_qaresults_grid=$(     alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/  "QAresults.root"           | grep -v part | grep data | wc -l )
 export n_qaresults_grid_part=$(alien_find /alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/data/2018/$period/ "QAresults.root"           | grep part    | grep data | wc -l )
 
 #echo "For $period there are $n_qares QAresults.root on grid and , $n_xmls local xmls (split)"

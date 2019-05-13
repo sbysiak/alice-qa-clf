@@ -1,14 +1,16 @@
 #!/bin/python
-#SBATCH --output="LOGS/slurm/trending-%j.out"
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user="sbysiak@cern.ch"
-#SBATCH --time=45
-#SBATCH -p plgrid-short
-#SBATCH --mem-per-cpu=5GB
-#SBATCH --mem=5GB
 #SBATCH -A aliceo2qa
 
-# \\\\  SBTACH --job-name="single_trending_job"
+#SBATCH --output="LOGS/slurm/trending-%j.out"
+#SBATCH --error="LOGS/slurm/trending-%j_error.out"
+#SBATCH --mem-per-cpu=5GB
+#SBATCH --mem=5GB
+#SBATCH --time=10
+# /// SBATCH -p plgrid-short
+
+
 
 
 import subprocess
@@ -18,8 +20,7 @@ import pexpect
 from time import sleep, time
 
 sys.path.append(os.getcwd()) # for slurm to find custom modules
-from master_trending_jobs import check_file
-
+from master_trending_jobs import check_file, check_file_root
 
 
 def copy_from_eos_single(fpath_eos):
@@ -38,7 +39,8 @@ def copy_from_eos_single(fpath_eos):
     child.expect(pexpect.EOF)
 
 
-def copy_from_eos(infile):
+def copy_from_eos(infile, fsize_min_kb=10000):
+    msg_not_found = 'WARNING - file: {} has not been copied!'
     with open(infile) as f:
         for fpath_eos in f:
             fpath_eos = fpath_eos.strip()
@@ -51,7 +53,13 @@ def copy_from_eos(infile):
                     print 'timeout exception, try once again ({} trial left)'.format(n_trials_left)
                     n_trials_left -= 1
                 else:
-                    break
+                    status_std_check = check_file(fpath_eos, fsize_min_kb, msg_not_found=msg_not_found)
+                    status_root_check = check_file_root(fpath_eos)
+                    if status_std_check > 0 or status_root_check > 0:
+                        print 'check_file failed, try once again ({} trial left)'.format(n_trials_left)
+                        n_trials_left -= 1
+                    else:
+                        break
 
 
 def validate_copying(infile, fsize_min_kb=10000):
@@ -73,8 +81,9 @@ def validate_copying(infile, fsize_min_kb=10000):
     with open(infile) as f:
         for fpath_eos in f:
             fpath_eos = fpath_eos.strip()
-            status = check_file(fpath_eos, fsize_min_kb, msg_not_found=msg_not_found)
-            if status > 0:
+            status_std_check = check_file(fpath_eos, fsize_min_kb, msg_not_found=msg_not_found)
+            status_root_check = check_file_root(fpath_eos)
+            if status_std_check > 0 or status_root_check > 0:
                 not_OK += 1
     return not_OK
 
@@ -122,11 +131,19 @@ def rm_QAresults(infile):
             cmd = 'rm {}'.format(fpath_eos)
             subprocess.call(cmd, shell=True)
 
+
+def load_aliroot():
+    cmd = 'alienv load AliPhysics/latest-master-user-next-root6'
+    print 'Running {}  ...'.format(cmd)
+    subprocess.call(cmd, shell=True)
+
 ################################################################################
 
 
 def main(infile):
     tic = time()
+    # print '---' *20 + '\m LOAD ALIROOT\n' + '---'*20
+    # load_aliroot()
     print '---' *20 + '\nCOPY FROM EOS\n' + '---'*20
     copy_from_eos(infile)
     print '---' *20 + '\nVALIDATE COPYING\n' + '---'*20
@@ -145,11 +162,13 @@ def main(infile):
     print 'exec. time = {}'.format(time() - tic)
     print 'number of files processed: {}'.format(n_files_processed)
     print 'number of issues:\n\tcopying: {}\n\ttrending: {}'.format(n_issues_copying, n_issues_trending)
-
+    return n_issues_trending
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    exit_status = main(sys.argv[1])
+    if exit_status: sys.exit(exit_status+1000)
+
 
 # copy files from EOS
 

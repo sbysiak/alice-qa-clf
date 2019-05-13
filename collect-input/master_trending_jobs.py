@@ -8,6 +8,7 @@ from time import sleep, time
 STD_MSG_FILE_NOT_FOUND = 'WARNING - file: {}  not found'
 STD_MSG_FILE_TOO_SMALL = 'WARNING - file: {}  has size ({} KB) below threshold ({} KB)'
 STD_MSG_FILE_OK = 'file: {}  ok'
+STD_MSG_FILE_NOT_ROOT = 'WARNING - file: {} is not a ROOT file'
 
 def check_file(fpath, fsize_min_kb,
             silent=False,
@@ -43,6 +44,38 @@ def check_file(fpath, fsize_min_kb,
     else:
         if not silent: print msg_not_found.format(fpath)
         return 1
+
+
+def check_file_root(fpath, silent=False,
+                    msg_ok='root check: '+STD_MSG_FILE_OK,
+                    msg_not_found=STD_MSG_FILE_NOT_FOUND,
+                    msg_not_root=STD_MSG_FILE_NOT_ROOT):
+    """function validating if file can be opened by ROOT
+
+    Parameters
+    ----------
+    fpath : string
+        name of file to be checked
+    silent : bool
+        stop printing
+    Returns
+    -------
+    status : int
+        0 = ok
+        1 = file not found
+        2 = file too small
+    """
+    cmd = 'aliroot .x \"openROOTfile.C(\\"{}\\")\"'.format(fpath)
+    output = subprocess.check_output(cmd, shell=True)
+    if 'not a ROOT file' in output:
+        if not silent: print msg_not_root.format(fpath)
+        return 2
+    elif 'does not exist' in output:
+        if not silent: print msg_not_found.format(fpath)
+        return 1
+    else:
+        if not silent: print msg_ok.format(fpath)
+        return 0
 
 
 # create list of all QAresults to be processed - e.g. one period
@@ -97,19 +130,21 @@ def split_list_for_subjobs(fname_master, n_files_per_subjob):
     return list_of_subjobs_infiles
 
 
-def run_subjob(infile):
-    job_output = 'LOGS/slurm/' + infile.replace('.tmp_qaresults_list', 'trending') + '_%j.out'
+def run_subjob(infile, partition='plgrid-short'):
+    job_stdout = 'LOGS/slurm/' + infile.replace('.tmp_qaresults_list', 'trending') + '_%j.out'
+    job_stderr = 'LOGS/slurm/' + infile.replace('.tmp_qaresults_list', 'trending') + '_%j_error.out'
     job_name = infile.replace('.tmp_qaresults_list', 'trend_')
-    cmd = 'sbatch --output {} --job-name {} single_trending_job.py {} '.format(job_output, job_name, infile)
+    cmd = 'sbatch --partition {} --output {} --error {} --job-name {} single_trending_job.py {} '.format(partition, job_stdout, job_stderr, job_name, infile)
     print 'Running {} \t...'.format(cmd)
     subprocess.call(cmd, shell=True)
 
 
-def get_n_running_subjobs():
-    cmd = 'squeue -u plgsbysiak'
+def get_n_running_subjobs(partition='plgrid-short'):
+    cmd = 'squeue -u plgsbysiak --format=\"%.20P\" | grep \"{}\" | wc -l'.format(partition.replace('-', '\-'))
     output = subprocess.check_output(cmd, shell=True)
     # print 'output of {} \t :\n{}'.format(cmd, output)
-    n_subjobs = len(output.strip().split('\n')) - 1
+    n_subjobs = int(output.strip())
+    # print 'there are {} jobs on {}'.format(n_subjobs, partition)
     return n_subjobs
 
 
@@ -120,13 +155,14 @@ def get_quota_percentage():
 
 
 
+
 def run_locally(infile):
     cmd = 'time python single_trending_job.py {} '.format(infile)
     print 'Running {} \t...'.format(cmd)
     subprocess.call(cmd, shell=True)
 
 
-def main(eos_main_dir_path, period_hash, max_n_subjobs=20, n_files_per_subjob=10, max_quota_perc=90):
+def main(eos_main_dir_path, period_hash, max_n_subjobs=20, n_files_per_subjob=10, max_quota_perc=90, partition='plgrid-short'):
     print '= = '*20 + '\nCREATE LIST OF QAresults\n' + '= = '*20
     fname_master = create_list_of_QAresults(eos_main_dir_path, period_hash)
     sleep(5)
@@ -136,37 +172,37 @@ def main(eos_main_dir_path, period_hash, max_n_subjobs=20, n_files_per_subjob=10
     sleep(5)
     print '= = '*20 + '\nRUN SUBJOBS\n' + '= = '*20
     for it,infile in enumerate(subjobs_infiles):
-        n_running_subjobs = get_n_running_subjobs()
+        n_running_subjobs = get_n_running_subjobs(partition)
         if not (it % 5): current_quota_perc = get_quota_percentage()
         while n_running_subjobs >= max_n_subjobs or current_quota_perc > max_quota_perc:
             quota_str = 'WARNING ({}%)'.format(current_quota_perc) if current_quota_perc > max_quota_perc else 'OK'
             print 'there are {} running subjobs and quota_status = {} - sleeping ...'.format(n_running_subjobs, quota_str)
-            sleep(20)
-            n_running_subjobs = get_n_running_subjobs()
+            sleep(30)
+            n_running_subjobs = get_n_running_subjobs(partition)
             current_quota_perc = get_quota_percentage()
-        run_subjob(infile)
+        run_subjob(infile, partition)
 
 
-def main_local(eos_main_dir_path, period_hash, n_files_per_subjob=10):
-    print '= = '*20 + '\nCREATE LIST OF QAresults\n' + '= = '*20
-    fname_master = create_list_of_QAresults(eos_main_dir_path, period_hash)
-    sleep(10)
-    print '= = '*20 + '\nSPLIT LIST FOR SUBJOBS\n' + '= = '*20
-    subjobs_infiles = split_list_for_subjobs(fname_master, n_files_per_subjob)
-    sleep(10)
-    print '= = '*20 + '\nRUN SUBJOBS\n' + '= = '*20
-    for infile in reversed(subjobs_infiles):
-        run_locally(infile)
-
+# def main_local(eos_main_dir_path, period_hash, n_files_per_subjob=10):
+#     print '= = '*20 + '\nCREATE LIST OF QAresults\n' + '= = '*20
+#     fname_master = create_list_of_QAresults(eos_main_dir_path, period_hash)
+#     sleep(10)
+#     print '= = '*20 + '\nSPLIT LIST FOR SUBJOBS\n' + '= = '*20
+#     subjobs_infiles = split_list_for_subjobs(fname_master, n_files_per_subjob)
+#     sleep(10)
+#     print '= = '*20 + '\nRUN SUBJOBS\n' + '= = '*20
+#     for infile in reversed(subjobs_infiles):
+#         run_locally(infile)
 
 ################################################################################
 
 if __name__ == '__main__':
-    main(eos_main_dir_path='/eos/user/a/aliqat/www/qcml/data/2018/LHC18o',
+    main(eos_main_dir_path='/eos/user/a/aliqat/www/qcml/data/2018/LHC18d',
          #period_hash='TEST_FLOATING_POINT_EXCEPTION',
-         period_hash='LHC18o_i2',
-         max_n_subjobs=200,
-         n_files_per_subjob=3)
+         period_hash='LHC18d_i101',
+         max_n_subjobs=2,
+         n_files_per_subjob=1,
+         partition='plgrid-testing')
 
     # main_local(eos_main_dir_path='/eos/user/a/aliqat/www/qcml/data/2018/LHC18q',
     #      period_hash='LHC18q',

@@ -8,9 +8,6 @@ export trending_size_lowlim="50"  # in KB
 export ocdbStorage="local:///net/archive/groups/plggaliceo2/qcml/OCDB-storage/cvmfs/alice-ocdb.cern.ch/calibration/data/2018/OCDB/"
 #DATA_DIR="/net/people/plgsbysiak/service-task/eos/user/a/aliqat/www/qcml/data/2018/LHC18q"
 #export dataType="data"
-export year="2018"
-export period="LHC18q"
-export pass="pass1"
 # # # # # # # # # # # #
 
 source TPC.sh
@@ -26,9 +23,13 @@ IFS=$'\n'       # make newlines the only separator
 set -f          # disable globbing
 for f in $(cat $files_trending); do
     echo $f
-    # assumes format:
-    export runNumber=`echo $f | cut -d "/" -f 10 | cut -c 4-9`
-    export chunkID=`echo $f | cut -d "/" -f 12 | cut -c 15-18 | sed 's/^0*//'` # sed to remove leading zeros
+    params=$(bash path2params.sh $f)
+    export year=$(     echo $params | cut -d " " -f1)
+    export period=$(   echo $params | cut -d " " -f2)
+    export runNumber=$(echo $params | cut -d " " -f3)
+    export pass=$(     echo $params | cut -d " " -f4)
+    export chunkID=$(  echo $params | cut -d " " -f5)
+
     export outfile="trending$(date "+%H%M%N").root"
     echo "run number = $runNumber"
     echo "chunk ID = $chunkID"
