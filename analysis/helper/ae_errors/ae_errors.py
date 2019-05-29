@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 DEFAULT_GROUPS_FUNCS = [
                         ('TPC-ITS_match.',  lambda col: 'tpcIts' in col),
-                        ('TPC_nclusters',   lambda col: 'TPC' in col), 
-#                        ('TPC_nclusters',   lambda col: 'TPC' in col and 'slope' not in col), 
-#                        ('TPC_ncl-fits',    lambda col: 'TPC' in col and 'slope' in col), 
+                        ('TPC_nclusters',   lambda col: 'TPC' in col),
+#                        ('TPC_nclusters',   lambda col: 'TPC' in col and 'slope' not in col),
+#                        ('TPC_ncl-fits',    lambda col: 'TPC' in col and 'slope' in col),
                         ('vertex',          lambda col: 'vert' in col.lower()),
                         ('multiplicity',    lambda col: 'Mult' in col),
                         ('pT',              lambda col: ('PtA' in col or 'PtC' in col or 'qOverPt' in col) and 'tpcIts' not in col and 'deltaPt' not in col),
@@ -19,8 +19,8 @@ DEFAULT_GROUPS_FUNCS = [
                         ('random',          lambda col: 'random' in col)
                         ]
 
-def group_columns(columns, groups_funcs, verbose=False):   
-    """groups columns according to functions defined in `groups_funcs` 
+def group_columns(columns, groups_funcs, verbose=False):
+    """groups columns according to functions defined in `groups_funcs`
 
     Parameters
     ----------
@@ -28,26 +28,26 @@ def group_columns(columns, groups_funcs, verbose=False):
         column names
 
     groups_func : list of tuples
-        list of pairs: 
-            group_name 
-            and 
+        list of pairs:
+            group_name
+            and
             function returning boolean value if column belong to the group
 
-    verbose : bool 
+    verbose : bool
 
     Returns
     -------
     ordered_columns : array of strings
-        
+
     groups : list of tuples
-        list of pairs: 
+        list of pairs:
             group_name
             and
             min and max value of indices of columns belonging to the group
     """
     ordered_columns = []
     groups = dict()
-    
+
     for group_name, group_func in groups_funcs:
         if verbose:
             print()
@@ -59,14 +59,14 @@ def group_columns(columns, groups_funcs, verbose=False):
         g_max = len(ordered_columns)-1
         if g_max > g_min: g_min += 1
         groups[group_name] = (g_min, g_max)
-    
+
     for col in columns:
         ncounts = ordered_columns.count(col)
         if ncounts > 1:
             raise ValueError(f'a column named {col} appeared in more than one group')
         elif ncounts < 1:
             ordered_columns.append(col)
-    
+
     return ordered_columns, groups
 
 
@@ -84,7 +84,7 @@ def plot_AE_error_single(errors, columns, ax, ylabel, groups_funcs):
         axes to plot on
     ylabel : string
         label of y-axis
-    groups_func : 
+    groups_func :
         passed to `group_columns()`
 
 
@@ -93,31 +93,31 @@ def plot_AE_error_single(errors, columns, ax, ylabel, groups_funcs):
     ax
     """
 
-    n_bars = len(errors)    
+    n_bars = len(errors)
     assert n_bars == len(columns)
-    
+
     ordered_columns, groups = group_columns(columns, groups_funcs=groups_funcs)
     ordered_errors = [errors[list(columns).index(c)] for c in ordered_columns]
-        
+
     ax.bar(range(n_bars), ordered_errors, width=0.5)
     ax.set_xlim([-1, n_bars+1])
     ax.set_xticks(range(0, n_bars))
     ax.set_xticklabels(labels=ordered_columns, rotation=90, horizontalalignment='center')
-    ax.set_ylabel(ylabel, {'fontsize':30})
+    ax.set_ylabel(ylabel, {'fontsize':25})
     ymax = ax.get_ylim()[1]
 
     for group_name, group_range in groups.items():
         if group_range[1] > group_range[0]:
-            ax.vlines([group_range[0]-0.5, group_range[1]+0.5], 
-                      0, ymax, 
+            ax.vlines([group_range[0]-0.5, group_range[1]+0.5],
+                      0, ymax,
                       linestyles='--')
-            ax.text(np.mean(group_range), 0.8*ymax, 
-                    group_name.replace('_', '\n'), 
-                    horizontalalignment='center', fontdict=dict(fontsize=20),
+            ax.text(np.mean(group_range), 0.8*ymax,
+                    group_name.replace('_', '\n'),
+                    horizontalalignment='center', fontdict=dict(fontsize=25),
                     bbox=dict(facecolor='white', edgecolor=None, alpha=0.8))
     return ax
 
-            
+
 
 def plot_AE_error(errors, columns, ylabels=None, groups_funcs=DEFAULT_GROUPS_FUNCS, axes=None):
     """plots barplot with AutoEncoder's errors for each error array
@@ -133,7 +133,7 @@ def plot_AE_error(errors, columns, ylabels=None, groups_funcs=DEFAULT_GROUPS_FUN
         default=None, meaning creating axes inside function
     ylabels : string or array of strings
         labels of y-axes
-    groups_func : 
+    groups_func :
         passed to `group_columns()`
 
 
@@ -141,14 +141,15 @@ def plot_AE_error(errors, columns, ylabels=None, groups_funcs=DEFAULT_GROUPS_FUN
     -------
     axes
     """
+    if isinstance(errors, list): errors = np.array(errors)
 
     if len(errors.shape) == 2:
         # 2D array -> multiple arrays passed in `errors`
-        if not ylabels: 
+        if not ylabels:
             print('Please provide labels list for y axes')
             ylabels = ['unknown' for _ in errors]
         n_err_arrays = len(errors)
-        if not axes:
+        if axes is None:
             fig, axes = plt.subplots(n_err_arrays, 1, figsize=(50,6*n_err_arrays))
         for err, ylabel, ax in zip(errors, ylabels, axes):
             plot_AE_error_single(err, columns, ax=ax, ylabel=ylabel, groups_funcs=groups_funcs)
@@ -157,7 +158,7 @@ def plot_AE_error(errors, columns, ylabels=None, groups_funcs=DEFAULT_GROUPS_FUN
         # 1D array -> single array passed in `errors`
         if not ylabels:
             ylabels = 'AE error'
-        if not axes:
+        if axes is None:
             fig, axes = plt.subplots(1,1, figsize=(50,6))
         plot_AE_error_single(errors, columns, ax=axes, ylabel=ylabels, groups_funcs=groups_funcs)
-        return axes 
+        return axes
