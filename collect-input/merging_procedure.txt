@@ -85,7 +85,7 @@ time for f1 in `find . -name "QAresults.root" | grep part_1`; do
     if (( f1_size_kb < FILE_SIZE_THRESHOLD )); then
         echo "part_1 has size = ${f1_size_kb} which is below threshold = ${FILE_SIZE_THRESHOLD} -- not merging"
         continue
-    elif (( f2_size_kb < $FILE_SIZE_THRESHOLD )); then
+    elif (( f2_size_kb < FILE_SIZE_THRESHOLD )); then
         echo "part_2 has size = ${f2_size_kb} which is below threshold = ${FILE_SIZE_THRESHOLD} -- not merging"
         continue
     else
@@ -101,21 +101,22 @@ time for f1 in `find . -name "QAresults.root" | grep part_1`; do
 done
 
 
+
 ---- trending extraction for det != TPC ---- (@lxplus)
 # copy QAresults.root to grid
 time bash copy_qa_to_grid.sh "data/2018/LHC18p/"
 
 # submit jobs and copy output
-time bash submit_jobs_trending.sh "LHC18p"                        ; time bash copy_job_trending_ouputs.sh "data/2018/LHC18p/"
+time bash submit_jobs_trending.sh "LHC18p"                        ; time bash copy_job_trending_outputs.sh "data/2018/LHC18p/"
 or
-time bash submit_jobs_trending.sh "LHC18p"  ["ITS:TOF:T0:TRD:EVS"]; time bash copy_job_trending_ouputs.sh "data/2018/LHC18p/"
+time bash submit_jobs_trending.sh "LHC18p"  ["ITS:TOF:T0:TRD:EVS"]; time bash copy_job_trending_outputs.sh "data/2018/LHC18p/"
 
 # merge all trending.root and trending_EVS.root for given period
 period="LHC18p"; cd $eos/data/2018/$period;
 alihadd trending_merged_$period.root `find . -name "trending.root"`;
 alihadd trending_EVS_merged_$period.root `find . -name "trending_EVS.root"`;
 
-# copy trending_merged_$period.root on the GRID
+# copy trending_merged_$period.root on the GRID and change its name to "trending.root"
 alien_cp trending_merged_$period.root alien:/alice/cern.ch/user/s/sbysiak/grid-jobs/OUTPUTS/statusTrees/data/2018/$period/input/
 
 # extract statusTree on GRID
