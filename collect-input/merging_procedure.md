@@ -8,7 +8,7 @@ mind the leading "/"
 
 ### create xmls (@lxplus)       
 _duration for LHC18o: 3min_  
-_be aware of [potential issue in PbPb](#largeXML)_  
+_be aware of [potential issue in PbPb](#issue-with-large-xmls-in-pbpb)_  
 `bash create_xmls.sh "data/2018/$PERIOD/"`
 
 ### split xmls (@lxplus)
@@ -144,7 +144,7 @@ then copy \`trending_merged_$PERIOD_withGraphs.csv\` to EOS
 
 
 
-# ~trending extraction on PLGRID:~
+### ~trending extraction on PLGRID:~
 ~`python master_trending_jobs.py  # set params of main()`  
 hadd trending and copy to eos~
 
