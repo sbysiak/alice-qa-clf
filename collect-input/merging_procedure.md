@@ -1,15 +1,46 @@
 # Steps before jobs submission
 --------
+First, login to lxplus and enter Alice software from CVMFS, e.g.
 
-### create local directories per run (@ local)
-e.g. OUTPUTS/data/2018/LHC18e/000286454/pass1/ @lxplus  
-mind the leading "/"  
-`bash create_dirs.sh "/alice/data/2018/$PERIOD"`
+    /cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@AliPhysics::vAN-20191022_ROOT6-1
+and obtain grid token:
 
-### create xmls (@lxplus)       
+    alien-token-init YOUR_USER_NAME
+
+It's also convenient to assign variables (@ lxplus)
+e.g.
+
+    qcml="/eos/user/a/aliqat/www/qcml/"
+    YEAR="2018"
+    PERIOD="LHC18r"
+    PASS="pass2"
+
+#### create local directories per run (@ lxplus)
+e.g. OUTPUTS/data/2018/LHC18e/000286454/pass1/
+
+    bash create_dirs.sh "$YEAR" "$PERIOD" "$PASS"
+
+----------------------------
+^^^^^  DONE  
+
+-----------------------------
+
+
+#### create xmls (@lxplus)       
 _duration for LHC18o: 3min_  
 _be aware of [potential issue in PbPb](#issue-with-large-xmls-in-pbpb)_  
-`bash create_xmls.sh "data/2018/$PERIOD/"`
+
+can be repeated
+
+    bash create_xmls.sh "$YEAR" "$PERIOD" "$PASS"
+
+
+Too large xmls:
+- cannot `find`, but can `ls`
+- but need XML for jobs submission
+- one could think about custom XML creation based on `ls` but there is also issue with failing jobs, if too many inputs, that's why XML were further split into two parts
+- running splitted alien_find can be integrated into `create_xmls.sh` and splitting into two for failing jobs treated as separate problem (it is indeed)
+
 
 ### split xmls (@lxplus)
 _duration for LHC18o: 30min_  
@@ -41,7 +72,7 @@ and then just run \`submit_jobs.sh\`
 ### Issue with large XMLs in PbPb
 some xmls will be invalid due to `alien_find` limitations  
 generating following error codes:  
-* 1 - Maximum number of columns exceeded (limit of alien_find reached)  
+* 1/139 - Maximum number of columns exceeded (limit of alien_find reached)  
 * 124 - timeout - can be extended in create_xmls.sh  
 
 In such cases, after \`create_xmls.sh\` check log file in order to find runs with invalid xmls. For those runs run script which executes \`alien_find\` for 3 parts and merges them in single xml  
@@ -144,7 +175,7 @@ then copy \`trending_merged_$PERIOD_withGraphs.csv\` to EOS
 
 
 
-### ~trending extraction on PLGRID:~
+# ~trending extraction on PLGRID:~
 ~`python master_trending_jobs.py  # set params of main()`  
 hadd trending and copy to eos~
 
@@ -160,3 +191,17 @@ hadd trending and copy to eos~
 ### export trending to *.csv
 `aliroot -q ".x trending2csv.C(\"trending_merged_$PERIOD.root\")"`  
 `python transpose.py trending_merged_$PERIOD_transposed.csv`
+
+
+
+
+# BELOW - TODO
+
+for f in `find . -name trending.root`; do
+    echo $f;
+    sshpass -f ~/.lxplus_pass rsync -avR $f sbysiak@lxplus.cern.ch:/eos/user/a/aliqat/www/qcml/data/;
+done   # to be run from outside of alidock OR copy ~/.lxplus_pass file inside; check current path vs target one
+
+# extract trading
+make_trending.sh
+
